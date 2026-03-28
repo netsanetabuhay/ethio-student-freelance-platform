@@ -5,20 +5,31 @@ require('dotenv').config();
 // Import DB connection
 const { connectDB } = require('./config/db');
 
+console.log("🚀 Starting server setup...");
+
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+console.log("📦 Middlewares loading...");
 
 app.use(cors());
 app.use(express.json());
 
+console.log("✅ Middlewares loaded successfully");
+
 // Connect DB
+console.log("🔌 Connecting to database...");
 connectDB();
+
+console.log("📡 Database connection function called");
 
 // Test route
 app.get('/', (req, res) => {
+    console.log("🌐 GET / request received");
     res.send('Server is running...');
 });
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`🔥 Server running on port ${PORT}`);
+    console.log(`👉 http://localhost:${PORT}`);
 });
