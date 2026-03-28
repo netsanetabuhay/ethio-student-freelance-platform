@@ -15,6 +15,11 @@ console.log("📦 Middlewares loading...");
 app.use(cors());
 app.use(express.json());
 
+var x = 10
+if(x == "10"){
+    console.log("bad comparison")
+}
+
 
 // Test route
 app.get('/', (req, res) => {
