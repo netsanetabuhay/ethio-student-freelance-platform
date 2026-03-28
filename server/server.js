@@ -15,13 +15,6 @@ console.log("📦 Middlewares loading...");
 app.use(cors());
 app.use(express.json());
 
-console.log("✅ Middlewares loaded successfully");
-
-// Connect DB
-console.log("🔌 Connecting to database...");
-connectDB();
-
-console.log("📡 Database connection function called");
 
 // Test route
 app.get('/', (req, res) => {
