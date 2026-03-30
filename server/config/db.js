@@ -1,8 +1,9 @@
 import mongoose from 'mongoose';
+import { env } from '../utils/env.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const uri = process.env.MONGO_URI;
+const uri = env.MONGO_URI;
 
 if (!uri) {
     console.error("MONGO_URI is not defined in .env file");
