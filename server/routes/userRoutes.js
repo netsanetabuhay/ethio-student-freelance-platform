@@ -4,8 +4,7 @@ import {
     login,
     getProfile,
     updateProfile,
-    changePassword,
-    getCoinBalance
+    changePassword
 } from '../controllers/userController.js';
 import { protect } from '../middleware/auth.js';
 import { uploadSingle } from '../utils/upload.js';
@@ -20,6 +19,5 @@ router.post('/login', login);
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, uploadSingle, updateProfile);
 router.put('/change-password', protect, changePassword);
-router.get('/coins', protect, getCoinBalance);
 
 export default router;

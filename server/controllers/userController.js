@@ -36,8 +36,10 @@ export const register = async (req, res) => {
             data: {
                 user: {
                     id: user._id,
-                    name: user.name,
+                    username: user.username,
                     email: user.email,
+                    firstname: user.firstname,
+                    lastname: user.lastname,
                     coins: user.coins,
                     profilePicture: user.profilePicture,
                     bio: user.bio,
@@ -79,7 +81,9 @@ export const login = async (req, res) => {
             data: {
                 user: {
                     id: user._id,
-                    name: user.name,
+                    username: user.username,
+                    firstname: user.firstname,
+                    lastname: user.lastname,
                     email: user.email,
                     coins: user.coins,
                     profilePicture: user.profilePicture,
@@ -124,7 +128,9 @@ export const updateProfile = async (req, res) => {
         
         // Only allow these fields to be updated
         const allowedUpdates = {
-            name: data.name,
+            username: data.username,
+            firstname: data.firstname,
+            lastname: data.lastname,
             bio: data.bio,
             educationLevel: data.educationLevel
         };
@@ -151,7 +157,9 @@ export const updateProfile = async (req, res) => {
             success: true,
             data: {
                 id: user._id,
-                name: user.name,
+                username: user.username,
+                firstname: user.firstname,
+                lastname: user.lastname,
                 email: user.email,
                 coins: user.coins,
                 profilePicture: user.profilePicture,
@@ -200,19 +208,3 @@ export const changePassword = async (req, res) => {
     }
 };
 
-export const getCoinBalance = async (req, res) => {
-    try {
-        const coins = await getUserCoinBalance(req.user.id);
-
-        res.json({
-            success: true,
-            data: { coins }
-        });
-    } catch (error) {
-        console.error('Get coin balance error:', error);
-        res.status(404).json({
-            success: false,
-            message: error.message
-        });
-    }
-};

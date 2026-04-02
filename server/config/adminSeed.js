@@ -23,7 +23,9 @@ export const seedAdmin = async () => {
         const hashedPassword = await bcrypt.hash(env.ADMIN_PASSWORD, salt);
         
         const admin = await User.create({
-            name: 'netsanet',
+            username: 'netsanet',
+            firstname: 'Netsanet',
+            lastname: 'abuhay',
             email: env.ADMIN_EMAIL,
             password: hashedPassword,
             phone: env.ADMIN_PHONE,
@@ -32,9 +34,7 @@ export const seedAdmin = async () => {
             status: 'active'
         });
         
-        console.log('✅ Admin user created successfully');
-        console.log(`📧 Admin Email: ${admin.email}`);
-        console.log(`👤 Admin Name: ${admin.name}`);
+        
         
     } catch (error) {
         console.error('Admin seed error:', error.message);

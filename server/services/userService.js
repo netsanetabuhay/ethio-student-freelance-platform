@@ -6,11 +6,15 @@ import { env } from '../utils/env.js';
 import { uploadProfilePicture } from '../utils/cloudinary.js';
 
 export const registerUser = async (userData, file) => {
-    const { name, email, password, educationLevel, bio } = userData;
+    const { username, firstname, lastname, email, password, educationLevel, bio } = userData;
     
     const existingUser = await User.findOne({ email });
     if (existingUser) {
         throw new Error('Email already registered');
+    }
+    const existingUsername = await User.findOne({ username });
+     if (existingUsername) {
+       throw new Error('Username already taken');
     }
     
     const salt = await bcrypt.genSalt(10);
@@ -28,7 +32,9 @@ export const registerUser = async (userData, file) => {
     }
     
     const user = await User.create({
-        name,
+       username,
+       firstname,
+       lastname,
         email,
         password: hashedPassword,
         educationLevel: educationLevel || '',
@@ -88,10 +94,16 @@ export const updateUserProfile = async (userId, updateData, file) => {
     if (!user) {
         throw new Error('User not found');
     }
+    const isexistingUsername= await User.findOne({ username: updateData.username });
+    if (isexistingUsername && isexistingUsername._id.toString() !== userId) {
+        throw new Error('Username already taken');
+    }
+
+    const { username, firstname, lastname, bio, educationLevel } = updateData;
     
-    const { name, bio, educationLevel } = updateData;
-    
-    if (name) user.name = name;
+    if (username) user.username = username;
+    if (firstname) user.firstname = firstname;
+    if (lastname) user.lastname = lastname;
     if (bio) user.bio = bio;
     if (educationLevel) user.educationLevel = educationLevel;
     

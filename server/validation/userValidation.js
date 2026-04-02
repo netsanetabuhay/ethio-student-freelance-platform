@@ -2,11 +2,13 @@ import Joi from 'joi';
 
 export const registerValidation = (data) => {
     const schema = Joi.object({
-        name: Joi.string().min(2).max(50).required(),
+        username: Joi.string().min(3).max(30).optional(),
+        firstname: Joi.string().min(2).max(50).optional(),
+        lastname: Joi.string().min(2).max(50).optional(),
         email: Joi.string().email().required().lowercase(),
         password: Joi.string().min(6).required(),
         confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
-        educationLevel: Joi.string().max(50).optional(),
+        educationLevel: Joi.string().max(100).optional(),
         bio: Joi.string().max(200).optional()
     });
     return schema.validate(data);
@@ -22,10 +24,13 @@ export const loginValidation = (data) => {
 
 export const updateProfileValidation = (data) => {
     const schema = Joi.object({
-        name: Joi.string().min(2).max(50).optional(),
+        username: Joi.string().min(3).max(50).optional(),
         profilePicture: Joi.string().uri().optional(),
         bio: Joi.string().max(200).optional(),
-        educationLevel: Joi.string().max(50).optional()
+        educationLevel: Joi.string().max(100).optional(),
+        username: Joi.string().min(3).max(30).optional(),
+        firstname: Joi.string().min(2).max(50).optional(),
+        lastname: Joi.string().min(2).max(50).optional(),
     });
     return schema.validate(data);
 };
