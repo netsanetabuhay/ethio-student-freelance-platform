@@ -53,11 +53,13 @@ export const buyCoins = async (req, res) => {
 
 export const getBalance = async (req, res) => {
     try {
-        const coins = await getUserCoinBalance(req.user.id);
+        const id = req.user.id;
+        const coins = await getUserCoinBalance(id);
         
         res.json({
             success: true,
-            data: { coins }
+            data: {"message": "Your current coin balance is",
+                coins }
         });
     } catch (error) {
         console.error('Get balance error:', error);
