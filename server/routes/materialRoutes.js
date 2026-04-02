@@ -6,7 +6,6 @@ import {
     checkUnlockStatus
 } from '../controllers/materialController.js';
 import { protect } from '../middleware/auth.js';
-import { checkPostExpiry } from '../middleware/checkPostExpiry.js';
 
 const router = express.Router();
 

@@ -14,6 +14,11 @@ export const unlockMaterial = async (buyerId, postId) => {
         throw new Error('Post not found');
     }
     
+    // ✅ Add post expiry check
+    if (post.expiresAt <= new Date()) {
+        throw new Error('Post has expired');
+    }
+    
     if (post.postType !== 'material' && post.postType !== 'both') {
         throw new Error('This post does not offer material');
     }
@@ -84,6 +89,11 @@ export const purchaseMaterial = async (buyerId, postId) => {
     const post = await Post.findById(postId);
     if (!post) {
         throw new Error('Post not found');
+    }
+    
+    // ✅ Add post expiry check
+    if (post.expiresAt <= new Date()) {
+        throw new Error('Post has expired');
     }
     
     if (post.postType !== 'material' && post.postType !== 'both') {

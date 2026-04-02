@@ -3,8 +3,9 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import CoinTransaction from '../models/CoinTransaction.js';
 import { env } from '../utils/env.js';
+import { uploadProfilePicture } from '../utils/cloudinary.js';
 
-export const registerUser = async (userData) => {
+export const registerUser = async (userData, file) => {
     const { name, email, password, educationLevel, bio } = userData;
     
     const existingUser = await User.findOne({ email });
@@ -15,12 +16,24 @@ export const registerUser = async (userData) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
     
+    let profilePicture = '';
+    
+    // Upload profile picture if provided
+    if (file) {
+        try {
+            profilePicture = await uploadProfilePicture(file.buffer, `temp_${Date.now()}`);
+        } catch (error) {
+            console.error('Profile picture upload error:', error);
+        }
+    }
+    
     const user = await User.create({
         name,
         email,
         password: hashedPassword,
-        educationLevel,
-        bio,
+        educationLevel: educationLevel || '',
+        bio: bio || '',
+        profilePicture,
         coins: env.REGISTRATION_BONUS
     });
     
@@ -36,7 +49,7 @@ export const registerUser = async (userData) => {
     const token = jwt.sign({ id: user._id }, env.JWT_SECRET, {
         expiresIn: env.JWT_EXPIRES_IN
     });
-    
+
     return { user, token };
 };
 
@@ -70,18 +83,26 @@ export const getUserProfile = async (userId) => {
     return user;
 };
 
-export const updateUserProfile = async (userId, updateData) => {
+export const updateUserProfile = async (userId, updateData, file) => {
     const user = await User.findById(userId);
     if (!user) {
         throw new Error('User not found');
     }
     
-    const { name, profilePicture, bio, educationLevel } = updateData;
+    const { name, bio, educationLevel } = updateData;
     
     if (name) user.name = name;
-    if (profilePicture) user.profilePicture = profilePicture;
     if (bio) user.bio = bio;
     if (educationLevel) user.educationLevel = educationLevel;
+    
+    // Upload new profile picture if provided
+    if (file) {
+        try {
+            user.profilePicture = await uploadProfilePicture(file.buffer, userId);
+        } catch (error) {
+            console.error('Profile picture update error:', error);
+        }
+    }
     
     await user.save();
     return user;

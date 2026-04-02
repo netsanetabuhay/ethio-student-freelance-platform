@@ -3,8 +3,9 @@ import User from '../models/User.js';
 import CoinTransaction from '../models/CoinTransaction.js';
 import { env } from '../utils/env.js';
 import { calculateExpiry } from '../utils/calculateExpiry.js';
+import { uploadMaterial } from '../utils/cloudinary.js';
 
-export const createPost = async (userId, postData) => {
+export const createPost = async (userId, postData, file) => {
     const { 
         postType, 
         title, 
@@ -13,10 +14,7 @@ export const createPost = async (userId, postData) => {
         gradeLevel, 
         location, 
         chatFee, 
-        materialPrice, 
-        materialFile, 
-        fileSize, 
-        fileType,
+        materialPrice,
         durationDays 
     } = postData;
     
@@ -25,13 +23,30 @@ export const createPost = async (userId, postData) => {
         throw new Error('User not found');
     }
     
-    const coinCost = durationDays;
+    const coinCost = parseInt(durationDays);
     
     if (user.coins < coinCost) {
         throw new Error(`Insufficient coins. Need ${coinCost}, have ${user.coins}`);
     }
     
     const expiresAt = calculateExpiry(durationDays);
+    
+    let materialFile = '';
+    let fileSize = 0;
+    let fileType = '';
+    
+    // Upload material file to Cloudinary if provided
+    if (file && (postType === 'material' || postType === 'both')) {
+        try {
+            const uploadResult = await uploadMaterial(file.buffer, `temp_${Date.now()}`, file.originalname);
+            materialFile = uploadResult.url;
+            fileSize = uploadResult.size;
+            fileType = uploadResult.format;
+        } catch (error) {
+            console.error('Material file upload error:', error);
+            throw new Error('Failed to upload material file');
+        }
+    }
     
     const post = await Post.create({
         userId,
@@ -43,9 +58,9 @@ export const createPost = async (userId, postData) => {
         location,
         chatFee: (postType === 'tutor' || postType === 'both') ? chatFee : undefined,
         materialPrice: (postType === 'material' || postType === 'both') ? materialPrice : undefined,
-        materialFile: (postType === 'material' || postType === 'both') ? materialFile : undefined,
-        fileSize: (postType === 'material' || postType === 'both') ? fileSize : undefined,
-        fileType: (postType === 'material' || postType === 'both') ? fileType : undefined,
+        materialFile,
+        fileSize,
+        fileType,
         durationDays,
         coinPaid: coinCost,
         expiresAt

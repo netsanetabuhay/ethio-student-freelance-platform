@@ -23,9 +23,11 @@ router.get('/users/:id', getUserById);
 router.put('/users/:id/suspend', suspendUser);
 router.put('/users/:id/activate', activateUser);
 
+
 // Coin purchase management
 router.get('/coin-purchases/pending', getPendingCoinPurchases);
 router.put('/coin-purchases/:id/verify', verifyCoinPurchaseRequest);
+
 
 // Post management
 router.get('/posts', getAllPosts);

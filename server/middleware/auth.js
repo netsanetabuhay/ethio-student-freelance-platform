@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { env } from '../utils/env.js';
 
+// Protect routes - verify user is logged in
 export const protect = async (req, res, next) => {
     try {
         let token;
@@ -36,4 +37,15 @@ export const protect = async (req, res, next) => {
             message: 'Not authorized, token failed'
         });
     }
+};
+
+// Admin only - verify user is admin
+export const authorize = (req, res, next) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({
+            success: false,
+            message: 'Admin access required'
+        });
+    }
+    next();
 };

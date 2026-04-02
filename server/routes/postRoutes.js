@@ -6,14 +6,12 @@ import {
     getMyPosts
 } from '../controllers/postController.js';
 import { protect } from '../middleware/auth.js';
-import { uploadSingle } from '../middleware/upload.js';
+import { uploadSingle } from '../utils/upload.js';
 
 const router = express.Router();
 
-// Protected routes
 router.use(protect);
 
-// Post routes
 router.post('/', uploadSingle, createNewPost);
 router.get('/', getAllPosts);
 router.get('/my-posts', getMyPosts);

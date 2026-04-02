@@ -12,6 +12,11 @@ export const startPaidChat = async (initiatorId, postId) => {
         throw new Error('Post not found');
     }
     
+    // Check post expiry
+    if (post.expiresAt <= new Date()) {
+        throw new Error('Post has expired');
+    }
+    
     if (post.postType !== 'tutor' && post.postType !== 'both') {
         throw new Error('This post does not offer tutoring');
     }
@@ -29,13 +34,17 @@ export const startPaidChat = async (initiatorId, postId) => {
         throw new Error('User not found');
     }
     
-    const chatFee = post.chatFee;
+    // Calculate total chat fee
+    const systemFee = 5; // Fixed system fee
+    const posterChatFee = post.chatFee || 0;
+    const totalFee = systemFee + posterChatFee;
     
-    if (initiator.coins < chatFee) {
-        throw new Error(`Insufficient coins. Need ${chatFee}, have ${initiator.coins}`);
+    if (initiator.coins < totalFee) {
+        throw new Error(`Insufficient coins. Need ${totalFee}, have ${initiator.coins}`);
     }
     
-    initiator.coins -= chatFee;
+    // Deduct total fee from initiator
+    initiator.coins -= totalFee;
     await initiator.save();
     
     const expiresAt = calculateChatExpiry();
@@ -45,17 +54,18 @@ export const startPaidChat = async (initiatorId, postId) => {
         initiatorId,
         recipientId: post.userId,
         source: 'paid_chat',
-        chatFee,
+        chatFee: totalFee,
         expiresAt
     });
     
+    // Record transaction for total fee
     await CoinTransaction.create({
         userId: initiator._id,
         type: 'chat_payment',
-        amount: -chatFee,
+        amount: -totalFee,
         balance: initiator.coins,
         referenceId: chatSession._id,
-        description: `Paid chat with post: ${post.title}`
+        description: `Chat payment: ${systemFee} (system) + ${posterChatFee} (poster fee) for post: ${post.title}`
     });
     
     await Notification.create({
@@ -111,9 +121,17 @@ export const getChatMessages = async (chatSessionId, userId, page = 1, limit = 5
         throw new Error('Chat session not found');
     }
     
+    // Check if user is part of this chat
     if (chatSession.initiatorId.toString() !== userId && 
         chatSession.recipientId.toString() !== userId) {
         throw new Error('You are not part of this chat');
+    }
+    
+    // Check if chat is expired
+    const isExpired = chatSession.expiresAt <= new Date();
+    
+    if (isExpired) {
+        throw new Error('Chat session has expired. Pay unlock fee to view history.');
     }
     
     const skip = (page - 1) * limit;
@@ -166,8 +184,16 @@ export const getUserChatSessions = async (userId, page = 1, limit = 20) => {
         })
     ]);
     
+    // Mark expired sessions
+    const now = new Date();
+    const sessionsWithStatus = sessions.map(session => {
+        const sessionObj = session.toObject();
+        sessionObj.isExpired = session.expiresAt <= now;
+        return sessionObj;
+    });
+    
     return {
-        sessions,
+        sessions: sessionsWithStatus,
         pagination: {
             page,
             limit,
@@ -175,4 +201,54 @@ export const getUserChatSessions = async (userId, page = 1, limit = 20) => {
             pages: Math.ceil(total / limit)
         }
     };
+};
+
+// New function to unlock expired chat history
+export const unlockExpiredChat = async (userId, chatSessionId) => {
+    const chatSession = await ChatSession.findById(chatSessionId);
+    if (!chatSession) {
+        throw new Error('Chat session not found');
+    }
+    
+    // Check if user is part of this chat
+    if (chatSession.initiatorId.toString() !== userId && 
+        chatSession.recipientId.toString() !== userId) {
+        throw new Error('You are not part of this chat');
+    }
+    
+    // Check if chat is already active
+    if (chatSession.expiresAt > new Date()) {
+        throw new Error('Chat session is still active');
+    }
+    
+    const user = await User.findById(userId);
+    if (!user) {
+        throw new Error('User not found');
+    }
+    
+    const unlockFee = 5;
+    
+    if (user.coins < unlockFee) {
+        throw new Error(`Insufficient coins. Need ${unlockFee}, have ${user.coins}`);
+    }
+    
+    user.coins -= unlockFee;
+    await user.save();
+    
+    // Extend chat expiry by 24 hours
+    const newExpiry = new Date();
+    newExpiry.setHours(newExpiry.getHours() + 24);
+    chatSession.expiresAt = newExpiry;
+    await chatSession.save();
+    
+    await CoinTransaction.create({
+        userId: user._id,
+        type: 'chat_unlock',
+        amount: -unlockFee,
+        balance: user.coins,
+        referenceId: chatSession._id,
+        description: `Unlocked expired chat history`
+    });
+    
+    return chatSession;
 };

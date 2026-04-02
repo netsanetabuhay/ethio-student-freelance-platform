@@ -2,8 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import connectDB from './config/db.js';
 import { env } from './utils/env.js';
-import { errorHandler, notFound } from './middleware/errorHandler.js';
+import { errorHandler, notFound } from './utils/errorHandler.js';
 import { startExpiryJobs } from './services/expiryService.js';
+import { seedAdmin } from './config/adminSeed.js';
 
 // Import all routes
 import userRoutes from './routes/userRoutes.js';
@@ -20,6 +21,9 @@ const PORT = env.PORT || 5000;
 // Connect to Database
 connectDB();
 
+// Seed admin user on first run
+await seedAdmin();
+
 // Start expiry cron jobs
 startExpiryJobs();
 
@@ -27,9 +31,6 @@ startExpiryJobs();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Static files for uploads
-app.use('/uploads', express.static('uploads'));
 
 // API Routes
 app.use('/api/users', userRoutes);
@@ -73,7 +74,7 @@ app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📦 Environment: ${env.NODE_ENV}`);
-    console.log(`🔗 API URL: http://localhost:${PORT}`);
+    console.log(` Server running on port ${PORT}`);
+    console.log(` Environment: ${env.NODE_ENV}`);
+    console.log(`API URL: http://localhost:${PORT}`);
 });

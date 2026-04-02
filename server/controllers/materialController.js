@@ -10,7 +10,6 @@ import {
     checkMaterialUnlock,
     hasPurchasedMaterial
 } from '../services/materialService.js';
-import { checkPostExpiry } from '../middleware/checkPostExpiry.js';
 
 export const unlock = async (req, res) => {
     try {
@@ -29,8 +28,7 @@ export const unlock = async (req, res) => {
         
         const { postId } = data;
         
-        await checkPostExpiry(postId);
-        
+        // Expiry check is handled inside unlockMaterial service
         const result = await unlockMaterial(req.user.id, postId);
         
         res.json({
@@ -64,13 +62,12 @@ export const purchase = async (req, res) => {
         
         const { postId } = data;
         
-        await checkPostExpiry(postId);
-        
-        const purchase = await purchaseMaterial(req.user.id, postId);
+        // Expiry check is handled inside purchaseMaterial service
+        const purchaseResult = await purchaseMaterial(req.user.id, postId);
         
         res.json({
             success: true,
-            data: purchase,
+            data: purchaseResult,
             message: 'Material purchased successfully! You can now download it.'
         });
     } catch (error) {

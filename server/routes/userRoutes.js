@@ -8,16 +8,17 @@ import {
     getCoinBalance
 } from '../controllers/userController.js';
 import { protect } from '../middleware/auth.js';
+import { uploadSingle } from '../utils/upload.js';
 
 const router = express.Router();
 
 // Public routes
-router.post('/register', register);
+router.post('/register', uploadSingle, register);
 router.post('/login', login);
 
-// Protected routes (require authentication)
+// Protected routes
 router.get('/profile', protect, getProfile);
-router.put('/profile', protect, updateProfile);
+router.put('/profile', protect, uploadSingle, updateProfile);
 router.put('/change-password', protect, changePassword);
 router.get('/coins', protect, getCoinBalance);
 

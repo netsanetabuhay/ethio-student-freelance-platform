@@ -8,19 +8,11 @@ import {
     getPostById,
     getUserPosts
 } from '../services/postService.js';
-import { getFileInfo } from '../utils/fileUpload.js';
 
 export const createNewPost = async (req, res) => {
     try {
         const data = req.body;
-        
-        // Handle file upload if material
-        if (req.file && (data.postType === 'material' || data.postType === 'both')) {
-            const fileInfo = getFileInfo(req.file);
-            data.materialFile = fileInfo.path;
-            data.fileSize = fileInfo.sizeInMB;
-            data.fileType = fileInfo.mimetype;
-        }
+        const file = req.file;
         
         const { error } = createPostValidation(data);
         if (error) {
@@ -33,7 +25,7 @@ export const createNewPost = async (req, res) => {
             });
         }
         
-        const post = await createPost(req.user.id, data);
+        const post = await createPost(req.user.id, data, file);
         
         res.status(201).json({
             success: true,
@@ -82,7 +74,6 @@ export const getPost = async (req, res) => {
         
         const { post, isOwner } = await getPostById(id, req.user.id);
         
-        // If not owner, hide sensitive info
         if (!isOwner && post.postType === 'material') {
             post.materialFile = undefined;
         }

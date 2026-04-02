@@ -7,9 +7,9 @@ import {
     startPaidChat,
     sendMessage,
     getChatMessages,
-    getUserChatSessions
+    getUserChatSessions,
+    unlockExpiredChat
 } from '../services/chatService.js';
-import { checkPostExpiry } from '../middleware/checkPostExpiry.js';
 
 export const startChat = async (req, res) => {
     try {
@@ -28,9 +28,7 @@ export const startChat = async (req, res) => {
         
         const { postId } = data;
         
-        // Check if post exists and is active
-        const post = await checkPostExpiry(postId);
-        
+        // Expiry check is handled inside startPaidChat service
         const chatSession = await startPaidChat(req.user.id, postId);
         
         res.status(201).json({
@@ -125,6 +123,25 @@ export const getMyChatSessions = async (req, res) => {
     } catch (error) {
         console.error('Get chat sessions error:', error);
         res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+export const unlockChatHistory = async (req, res) => {
+    try {
+        const { chatSessionId } = req.params;
+        
+        const chatSession = await unlockExpiredChat(req.user.id, chatSessionId);
+        
+        res.json({
+            success: true,
+            data: chatSession,
+            message: 'Chat history unlocked for 24 hours. You can now view messages.'
+        });
+    } catch (error) {
+        console.error('Unlock chat error:', error);
+        res.status(400).json({
             success: false,
             message: error.message
         });

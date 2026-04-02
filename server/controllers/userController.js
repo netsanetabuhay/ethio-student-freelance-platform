@@ -1,7 +1,3 @@
-import User from '../models/User.js';
-import CoinTransaction from '../models/CoinTransaction.js';
-import { env } from '../utils/env.js';
-import generateToken from '../utils/generateToken.js';
 import {
     registerValidation,
     loginValidation,
@@ -20,6 +16,7 @@ import {
 export const register = async (req, res) => {
     try {
         const data = req.body;
+        const file = req.file;
 
         const { error } = registerValidation(data);
         if (error) {
@@ -32,7 +29,7 @@ export const register = async (req, res) => {
             });
         }
 
-        const { user, token } = await registerUser(data);
+        const { user, token } = await registerUser(data, file);
 
         res.status(201).json({
             success: true,
@@ -45,7 +42,8 @@ export const register = async (req, res) => {
                     profilePicture: user.profilePicture,
                     bio: user.bio,
                     educationLevel: user.educationLevel,
-                    status: user.status
+                    status: user.status,
+                    role: user.role
                 },
                 token
             }
@@ -61,8 +59,8 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
     try {
-        const dataforlogin = req.body;
-        const { error } = loginValidation(dataforlogin);
+        const data = req.body;
+        const { error } = loginValidation(data);
         if (error) {
             return res.status(400).json({
                 success: false,
@@ -73,7 +71,7 @@ export const login = async (req, res) => {
             });
         }
 
-        const { email, password } = dataforlogin;
+        const { email, password } = data;
         const { user, token } = await loginUser(email, password);
 
         res.json({
@@ -87,7 +85,8 @@ export const login = async (req, res) => {
                     profilePicture: user.profilePicture,
                     bio: user.bio,
                     educationLevel: user.educationLevel,
-                    status: user.status
+                    status: user.status,
+                    role: user.role
                 },
                 token
             }
@@ -120,8 +119,22 @@ export const getProfile = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
     try {
-        const dataforupdate = req.body;
-        const { error } = updateProfileValidation(dataforupdate);
+        const data = req.body;
+        const file = req.file;
+        
+        // Only allow these fields to be updated
+        const allowedUpdates = {
+            name: data.name,
+            bio: data.bio,
+            educationLevel: data.educationLevel
+        };
+        
+        // Remove undefined fields
+        Object.keys(allowedUpdates).forEach(key => 
+            allowedUpdates[key] === undefined && delete allowedUpdates[key]
+        );
+        
+        const { error } = updateProfileValidation(allowedUpdates);
         if (error) {
             return res.status(400).json({
                 success: false,
@@ -132,7 +145,7 @@ export const updateProfile = async (req, res) => {
             });
         }
 
-        const user = await updateUserProfile(req.user.id, dataforupdate);
+        const user = await updateUserProfile(req.user.id, allowedUpdates, file);
 
         res.json({
             success: true,
@@ -144,8 +157,10 @@ export const updateProfile = async (req, res) => {
                 profilePicture: user.profilePicture,
                 bio: user.bio,
                 educationLevel: user.educationLevel,
-                status: user.status
-            }
+                status: user.status,
+                role: user.role
+            },
+            message: 'Profile updated successfully. Coins and role cannot be changed.'
         });
     } catch (error) {
         console.error('Update profile error:', error);
@@ -158,8 +173,8 @@ export const updateProfile = async (req, res) => {
 
 export const changePassword = async (req, res) => {
     try {
-        const dataforpasswordchange = req.body;
-        const { error } = changePasswordValidation(dataforpasswordchange);
+        const data = req.body;
+        const { error } = changePasswordValidation(data);
         if (error) {
             return res.status(400).json({
                 success: false,
@@ -170,9 +185,9 @@ export const changePassword = async (req, res) => {
             });
         }
 
-        const { currentPassword, newPassword } = dataforpasswordchange;
-      await changeUserPassword(req.user.id, currentPassword, newPassword);
-       res.json({
+        const { currentPassword, newPassword } = data;
+        await changeUserPassword(req.user.id, currentPassword, newPassword);
+        res.json({
             success: true,
             message: 'Password changed successfully'
         });
