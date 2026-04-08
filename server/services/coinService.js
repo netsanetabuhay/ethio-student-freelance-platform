@@ -5,19 +5,21 @@ import Notification from '../models/Notification.js';
 import { createTransaction } from '../utils/coinTransactions.js';
 
 export const buyCoinsRequest = async (userId, coinAmount, amountPaid, paymentMethod, accountDetails, transactionId) => {
+
     // Check if transaction ID already exists
-    const existingPurchase = await CoinPurchase.findOne({ transactionId });
-    if (existingPurchase) {
-        throw new Error('Transaction ID already exists. Please check and try again.');
-    }
+    // const existingPurchase = await CoinPurchase.findOne({ transactionId });
+    // if (existingPurchase) {
+    //     throw new Error('Transaction ID already exists. Please check and try again.');
+    // }
+
     
     const coinPurchase = await CoinPurchase.create({
-        userId,
-        coinAmount,
-        amountPaid,
-        paymentMethod,
-        accountDetails,
-        transactionId,
+       userId: userId,
+        coinAmount: coinAmount,
+       amountPaind: amountPaid,
+        paymentMethod: paymentMethod,
+        accountDetails : accountDetails,
+        transactionId: transactionId,
         status: 'pending'
     });
     
@@ -123,4 +125,11 @@ export const getUserPurchaseHistory = async (userId, page = 1, limit = 20) => {
             pages: Math.ceil(total / limit)
         }
     };
+};
+export const getUserCoinBalance = async (userId) => {
+    const user = await User.findById(userId).select('coins');
+    if (!user) {
+        throw new Error('User not found');
+    }
+    return user.coins;
 };

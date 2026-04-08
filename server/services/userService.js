@@ -56,7 +56,7 @@ export const registerUser = async (userData, file) => {
         expiresIn: env.JWT_EXPIRES_IN
     });
 
-    return { user, token };
+    return { user};
 };
 
 export const loginUser = async (email, password) => {
@@ -138,10 +138,3 @@ export const changeUserPassword = async (userId, currentPassword, newPassword) =
     return true;
 };
 
-export const getUserCoinBalance = async (userId) => {
-    const user = await User.findById(userId).select('coins');
-    if (!user) {
-        throw new Error('User not found');
-    }
-    return user.coins;
-};

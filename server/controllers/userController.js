@@ -9,8 +9,7 @@ import {
     loginUser,
     getUserProfile,
     updateUserProfile,
-    changeUserPassword,
-    getUserCoinBalance
+    changeUserPassword
 } from '../services/userService.js';
 
 export const register = async (req, res) => {
@@ -29,7 +28,7 @@ export const register = async (req, res) => {
             });
         }
 
-        const { user, token } = await registerUser(data, file);
+        const { user } = await registerUser(data, file);
 
         res.status(201).json({
             success: true,
@@ -46,8 +45,7 @@ export const register = async (req, res) => {
                     educationLevel: user.educationLevel,
                     status: user.status,
                     role: user.role
-                },
-                token
+                }
             }
         });
     } catch (error) {
@@ -116,7 +114,7 @@ export const getProfile = async (req, res) => {
         console.error('Get profile error:', error);
         res.status(404).json({
             success: false,
-            message: error.message
+            data: error.message
         });
     }
 };
@@ -174,7 +172,7 @@ export const updateProfile = async (req, res) => {
         console.error('Update profile error:', error);
         res.status(400).json({
             success: false,
-            message: error.message
+            data: error.message
         });
     }
 };
@@ -188,7 +186,7 @@ export const changePassword = async (req, res) => {
                 success: false,
                 errors: error.details.map(err => ({
                     field: err.path[0],
-                    message: err.message
+                    data: err.message
                 }))
             });
         }
@@ -203,7 +201,7 @@ export const changePassword = async (req, res) => {
         console.error('Change password error:', error);
         res.status(400).json({
             success: false,
-            message: error.message
+            data: error.message
         });
     }
 };

@@ -6,14 +6,14 @@ import {
     buyCoinsRequest,
     getUserPurchaseHistory
 } from '../services/coinService.js';
-import { getUserCoinBalance } from '../services/userService.js';
+import { getUserCoinBalance } from '../services/coinService.js'
 import { getUserTransactions, getTransactionSummary } from '../utils/coinTransactions.js';
 
 export const buyCoins = async (req, res) => {
     try {
         const data = req.body;
         
-        const { error } = buyCoinsValidation(data);
+        const { error } = await buyCoinsValidation(data);
         if (error) {
             return res.status(400).json({
                 success: false,
