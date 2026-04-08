@@ -4,16 +4,17 @@ import {
 } from '../validation/coinValidation.js';
 import {
     buyCoinsRequest,
-    getUserPurchaseHistory
+    getUserPurchaseHistory,
+    getUserCoinBalance
 } from '../services/coinService.js';
-import { getUserCoinBalance } from '../services/coinService.js'
 import { getUserTransactions, getTransactionSummary } from '../utils/coinTransactions.js';
 
 export const buyCoins = async (req, res) => {
     try {
         const data = req.body;
+        console.log('Buy coins request data:', data);
         
-        const { error } = await buyCoinsValidation(data);
+        const { error } = buyCoinsValidation(data);
         if (error) {
             return res.status(400).json({
                 success: false,
@@ -55,11 +56,12 @@ export const getBalance = async (req, res) => {
     try {
         const id = req.user.id;
         const coins = await getUserCoinBalance(id);
+        console.log('coins:', coins);
         
         res.json({
             success: true,
-            data: {"message": "Your current coin balance is",
-                coins }
+            data: {"message": 'You have retrieved your coin balance successfully',
+                "yourCoins": coins }
         });
     } catch (error) {
         console.error('Get balance error:', error);

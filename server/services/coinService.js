@@ -7,16 +7,16 @@ import { createTransaction } from '../utils/coinTransactions.js';
 export const buyCoinsRequest = async (userId, coinAmount, amountPaid, paymentMethod, accountDetails, transactionId) => {
 
     // Check if transaction ID already exists
-    // const existingPurchase = await CoinPurchase.findOne({ transactionId });
-    // if (existingPurchase) {
-    //     throw new Error('Transaction ID already exists. Please check and try again.');
-    // }
+    const existingPurchase = await CoinPurchase.findOne({ transactionId });
+    if (existingPurchase) {
+        throw new Error('Transaction ID already exists. Please check and try again.');
+    }
 
     
     const coinPurchase = await CoinPurchase.create({
        userId: userId,
         coinAmount: coinAmount,
-       amountPaind: amountPaid,
+       amountPaid: amountPaid,
         paymentMethod: paymentMethod,
         accountDetails : accountDetails,
         transactionId: transactionId,
@@ -45,6 +45,11 @@ export const verifyCoinPurchase = async (purchaseId, adminId, status, transactio
         throw new Error('Purchase already processed');
     }
     
+    // ✅ Prevent adding coins if already added
+    if (purchase.coinsAdded === true) {
+        throw new Error('Coins already added for this purchase');
+    }
+    
     purchase.status = status;
     purchase.verifiedBy = adminId;
     purchase.verifiedAt = new Date();
@@ -57,8 +62,12 @@ export const verifyCoinPurchase = async (purchaseId, adminId, status, transactio
             throw new Error('User not found');
         }
         
-        user.coins += purchase.coinAmount;
-        await user.save();
+        // ✅ Only add coins if not already added
+        if (!purchase.coinsAdded) {
+            user.coins = user.coins + purchase.coinAmount;
+            await user.save();
+            purchase.coinsAdded = true;
+        }
         
         await createTransaction(
             user._id,
