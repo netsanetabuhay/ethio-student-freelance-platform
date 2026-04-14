@@ -64,7 +64,7 @@ export const verifyCoinPurchase = async (purchaseId, adminId, status, transactio
         
         // ✅ Only add coins if not already added
         if (!purchase.coinsAdded) {
-            user.coins = user.coins + purchase.coinAmount;
+            user.coins = Number(user.coins) + Number(purchase.coinAmount);
             await user.save();
             purchase.coinsAdded = true;
         }
@@ -91,50 +91,31 @@ export const verifyCoinPurchase = async (purchaseId, adminId, status, transactio
     return purchase;
 };
 
-export const getPendingPurchases = async (page = 1, limit = 20) => {
-    const skip = (page - 1) * limit;
+// No pagination, user sees own, admin sees all
+export const getPendingPurchases = async (userId, role) => {
+    // Build query
+    let query = { status: 'pending' };
     
-    const [purchases, total] = await Promise.all([
-        CoinPurchase.find({ status: 'pending' })
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .populate('userId', 'name email'),
-        CoinPurchase.countDocuments({ status: 'pending' })
-    ]);
+    // If not admin, only show user's own pending purchases
+    if (role !== 'admin') {
+        query.userId = userId;
+    }
     
-    return {
-        purchases,
-        pagination: {
-            page,
-            limit,
-            total,
-            pages: Math.ceil(total / limit)
-        }
-    };
+    const purchases = await CoinPurchase.find(query)
+        .sort({ createdAt: -1 })
+        .populate('userId', 'username');
+    
+    return purchases;
 };
 
-export const getUserPurchaseHistory = async (userId, page = 1, limit = 20) => {
-    const skip = (page - 1) * limit;
+export const getUserPurchaseHistory = async (userId) => {
+    const purchases = await CoinPurchase.find({ userId })
+        .sort({ createdAt: -1 });
     
-    const [purchases, total] = await Promise.all([
-        CoinPurchase.find({ userId })
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit),
-        CoinPurchase.countDocuments({ userId })
-    ]);
-    
-    return {
-        purchases,
-        pagination: {
-            page,
-            limit,
-            total,
-            pages: Math.ceil(total / limit)
-        }
-    };
+    return purchases;
 };
+
+//getuser coin balance
 export const getUserCoinBalance = async (userId) => {
     const user = await User.findById(userId).select('coins');
     if (!user) {

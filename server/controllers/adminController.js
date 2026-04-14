@@ -1,6 +1,8 @@
 import User from '../models/User.js';
 import Post from '../models/Post.js';
 import CoinPurchase from '../models/CoinPurchase.js';
+import CoinTransaction from '../models/CoinTransaction.js';
+import Notification from '../models/Notification.js';
 import {
     verifyCoinPurchase,
     getPendingPurchases
@@ -9,29 +11,14 @@ import { verifyCoinPurchaseValidation } from '../validation/coinValidation.js';
 
 export const getAllUsers = async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
-        const skip = (page - 1) * limit;
-        
-        const [users, total] = await Promise.all([
-            User.find().select('-password').sort({ createdAt: -1 }).skip(skip).limit(limit),
-            User.countDocuments()
-        ]);
+        const users = await User.find().select('-password').sort({ createdAt: -1 });
         
         res.json({
             success: true,
-            data: {
-                users,
-                pagination: {
-                    page,
-                    limit,
-                    total,
-                    pages: Math.ceil(total / limit)
-                }
-            }
+            message: 'Users retrieved successfully',
+            data: users
         });
     } catch (error) {
-        console.error('Get all users error:', error);
         res.status(500).json({
             success: false,
             message: error.message
@@ -53,10 +40,10 @@ export const getUserById = async (req, res) => {
         
         res.json({
             success: true,
+            message: 'User retrieved successfully',
             data: user
         });
     } catch (error) {
-        console.error('Get user error:', error);
         res.status(500).json({
             success: false,
             message: error.message
@@ -81,10 +68,10 @@ export const suspendUser = async (req, res) => {
         
         res.json({
             success: true,
-            message: 'User suspended successfully'
+            message: 'User suspended successfully',
+            data: { id: user._id, status: user.status }
         });
     } catch (error) {
-        console.error('Suspend user error:', error);
         res.status(500).json({
             success: false,
             message: error.message
@@ -109,10 +96,10 @@ export const activateUser = async (req, res) => {
         
         res.json({
             success: true,
-            message: 'User activated successfully'
+            message: 'User activated successfully',
+            data: { id: user._id, status: user.status }
         });
     } catch (error) {
-        console.error('Activate user error:', error);
         res.status(500).json({
             success: false,
             message: error.message
@@ -122,17 +109,15 @@ export const activateUser = async (req, res) => {
 
 export const getPendingCoinPurchases = async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
-        
-        const result = await getPendingPurchases(page, limit);
+        console.log(req.user.id);
+        const purchases = await getPendingPurchases(req.user.id, req.user.role);
         
         res.json({
             success: true,
-            data: result
+            message: 'Pending purchases retrieved successfully',
+            data: purchases
         });
     } catch (error) {
-        console.error('Get pending purchases error:', error);
         res.status(500).json({
             success: false,
             message: error.message
@@ -149,10 +134,7 @@ export const verifyCoinPurchaseRequest = async (req, res) => {
         if (error) {
             return res.status(400).json({
                 success: false,
-                errors: error.details.map(err => ({
-                    field: err.path[0],
-                    message: err.message
-                }))
+                message: error.details[0].message
             });
         }
         
@@ -162,11 +144,10 @@ export const verifyCoinPurchaseRequest = async (req, res) => {
         
         res.json({
             success: true,
-            data: purchase,
-            message: `Purchase ${status} successfully`
+            message: `Purchase ${status} successfully`,
+            data: purchase
         });
     } catch (error) {
-        console.error('Verify purchase error:', error);
         res.status(400).json({
             success: false,
             message: error.message
@@ -176,29 +157,14 @@ export const verifyCoinPurchaseRequest = async (req, res) => {
 
 export const getAllPosts = async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
-        const skip = (page - 1) * limit;
-        
-        const [posts, total] = await Promise.all([
-            Post.find().sort({ createdAt: -1 }).skip(skip).limit(limit).populate('userId', 'name email'),
-            Post.countDocuments()
-        ]);
+        const posts = await Post.find().sort({ createdAt: -1 }).populate('userId', 'name email');
         
         res.json({
             success: true,
-            data: {
-                posts,
-                pagination: {
-                    page,
-                    limit,
-                    total,
-                    pages: Math.ceil(total / limit)
-                }
-            }
+            message: 'Posts retrieved successfully',
+            data: posts
         });
     } catch (error) {
-        console.error('Get all posts error:', error);
         res.status(500).json({
             success: false,
             message: error.message
@@ -222,10 +188,10 @@ export const deletePost = async (req, res) => {
         
         res.json({
             success: true,
-            message: 'Post deleted successfully'
+            message: 'Post deleted successfully',
+            data: { id: post._id }
         });
     } catch (error) {
-        console.error('Delete post error:', error);
         res.status(500).json({
             success: false,
             message: error.message
@@ -256,6 +222,7 @@ export const getPlatformStats = async (req, res) => {
         
         res.json({
             success: true,
+            message: 'Platform statistics retrieved successfully',
             data: {
                 users: {
                     total: totalUsers,
@@ -272,7 +239,6 @@ export const getPlatformStats = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Get stats error:', error);
         res.status(500).json({
             success: false,
             message: error.message

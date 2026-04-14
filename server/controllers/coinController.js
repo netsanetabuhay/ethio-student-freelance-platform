@@ -5,7 +5,8 @@ import {
 import {
     buyCoinsRequest,
     getUserPurchaseHistory,
-    getUserCoinBalance
+    getUserCoinBalance,
+    getPendingPurchases
 } from '../services/coinService.js';
 import { getUserTransactions, getTransactionSummary } from '../utils/coinTransactions.js';
 
@@ -102,6 +103,23 @@ export const getTransactionSummaryStats = async (req, res) => {
         });
     } catch (error) {
         console.error('Get transaction summary error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+export const getMyPendingPurchases = async (req, res) => {
+    try {
+        const purchases = await getPendingPurchases(req.user.id, 'user');
+        
+        res.json({
+            success: true,
+            message: 'Your pending purchases retrieved successfully',
+            data: purchases
+        });
+    } catch (error) {
         res.status(500).json({
             success: false,
             message: error.message

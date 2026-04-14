@@ -8,17 +8,16 @@ export const seedAdmin = async () => {
         const adminExists = await User.findOne({ role: 'admin' });
         
         if (adminExists) {
-            console.log('✅ Admin user already exists');
+            console.log(' Admin user already exists');
             return;
         }
         
         // Check if admin credentials exist in env
         if (!env.ADMIN_EMAIL || !env.ADMIN_PASSWORD) {
-            console.log('⚠️ Admin credentials not found in .env file. Skipping admin creation.');
+            console.log(' Admin credentials not found in .env file. Skipping admin creation.');
             return;
         }
         
-        // Create admin from environment variables
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(env.ADMIN_PASSWORD, salt);
         

@@ -4,7 +4,8 @@ import {
     getBalance,
     getTransactionHistory,
     getTransactionSummaryStats,
-    getMyPurchaseHistory
+    getMyPurchaseHistory,
+    getMyPendingPurchases
 } from '../controllers/coinController.js';
 import { protect } from '../middleware/auth.js';
 
@@ -19,5 +20,6 @@ router.post('/buy', buyCoins);
 router.get('/transactions', getTransactionHistory);
 router.get('/transactions/summary', getTransactionSummaryStats);
 router.get('/purchases', getMyPurchaseHistory);
+router.get('/purchases/pending', getMyPendingPurchases);  // User sees only their own pending
 
 export default router;
